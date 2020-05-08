@@ -42,7 +42,7 @@ exports.getUserWithId = getUserWithId;
 const addUser =  function(user) {
   return pool.query('INSERT INTO users (name, email, password) VALUES ($1,$2,$3) RETURNING *;',
     [user.name,user.email,user.password])
-    .then(user => user.rows);
+    .then(user => user.rows); 
 };
 exports.addUser = addUser;
 
@@ -53,8 +53,17 @@ exports.addUser = addUser;
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-const getAllReservations = async function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+const getAllReservations = function(guest_id, limit = 10) {
+  return pool.query(`
+  SELECT reservations.*, properties.*, AVG(rating) as average_rating
+  FROM reservations
+  JOIN properties ON properties.id = reservations.property_id
+  JOIN property_reviews ON property_reviews.property_id = reservations.property_id
+  WHERE reservations.guest_id = $1
+  GROUP BY reservations.id, properties.id, properties.title, cost_per_night
+  ORDER BY start_date DESC
+  LIMIT $2;`,[guest_id,limit])
+  .then(res => res.rows);
 }
 exports.getAllReservations = getAllReservations;
 
@@ -67,7 +76,15 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
-  return pool.query(`SELECT * FROM properties LIMIT $1`,[limit])
+  return pool.query(`
+  SELECT reservations.*, properties.*, AVG(rating) as average_rating
+  FROM reservations
+  JOIN properties ON properties.id = reservations.property_id
+  JOIN property_reviews ON property_reviews.property_id = reservations.property_id
+  GROUP BY reservations.id, properties.id, properties.title, cost_per_night
+  ORDER BY start_date DESC
+  LIMIT $1;
+  `,[limit])
     .then(res => res.rows);
 };
 exports.getAllProperties = getAllProperties;
