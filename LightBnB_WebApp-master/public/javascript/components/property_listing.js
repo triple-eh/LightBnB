@@ -13,6 +13,8 @@ $(() => {
             <li>number_of_bedrooms: ${property.number_of_bedrooms}</li>
             <li>number_of_bathrooms: ${property.number_of_bathrooms}</li>
             <li>parking_spaces: ${property.parking_spaces}</li>
+            <li>city: ${property.city}</li>
+            <li>cost_per_night: ${property.cost_per_night}</li>
           </ul>
           ${isReservation ? 
             `<p>${moment(property.start_date).format('ll')} - ${moment(property.end_date).format('ll')}</p>` 
